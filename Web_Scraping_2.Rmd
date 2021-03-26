@@ -71,6 +71,7 @@ names(df) <- c('date', 'statement_text')
 
 library("rvest")
 library("dplyr")
+library(quanteda)
 ```
 
 
@@ -186,7 +187,9 @@ df = df[!df$date>=20210000,]
 ```
 
 
-
+```{r}
+# write.csv(df,"FED_data_scrape.csv", row.names = FALSE)
+```
 
 <br><br>
 
@@ -203,6 +206,39 @@ _5 Points_
 
 ```{r}
 
+#create a bag of words
+TOKS <- tokens(df[,2], remove_numbers = TRUE, remove_punct = TRUE, remove_symbols = TRUE, remove_separators = TRUE,split_hyphens = TRUE)
+n1 <- tokens_ngrams(TOKS, n=1)
+# print(n1)
+
+#tokenize and filter data
+TOKS <- tokens_wordstem(TOKS, language="english")
+TOKS <- tokens_remove(TOKS, stopwords("english"))
+
+```
+
+```{r}
+
+#DTM matrix
+DTM <- dfm(TOKS)
+DTM <- dfm_select(DTM, min_nchar = 2, selection="remove", pattern=c("percent","chairman","fomc","board","feder","committe","market","econom","polici"), valuetype="fixed")
+
+topfeatures((DTM))
+
+#tf-idf
+DTM_tfidf <- dfm_tfidf(DTM)
+DTM_tfidf
+
+```
+
+```{r}
+set.seed(100)
+
+textplot_wordcloud(DTM, min_count = 40, random_order = FALSE, rotation = 0.25, color = RColorBrewer::brewer.pal(8, "Dark2"), max_size=5, min_size = 0.1)
+```
+
+```{r}
+DTM
 ```
 
 
