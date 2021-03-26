@@ -71,7 +71,9 @@ names(df) <- c('date', 'statement_text')
 
 library("rvest")
 library("dplyr")
-library(quanteda)
+library("quanteda")
+library("stringr")
+library("ggplot2")
 ```
 
 
@@ -221,25 +223,31 @@ TOKS <- tokens_remove(TOKS, stopwords("english"))
 
 #DTM matrix
 DTM <- dfm(TOKS)
-DTM <- dfm_select(DTM, min_nchar = 2, selection="remove", pattern=c("percent","chairman","fomc","board","feder","committe","market","econom","polici"), valuetype="fixed")
+DTM <- dfm_select(DTM, min_nchar = 2, selection="remove", pattern=c("percent","chairman","fomc","board","feder","committe","market","econom","polici","today","meet","decid"), valuetype="fixed")
 
 topfeatures((DTM))
 
 #tf-idf
 DTM_tfidf <- dfm_tfidf(DTM)
 DTM_tfidf
-
 ```
 
-```{r}
-set.seed(100)
-
-textplot_wordcloud(DTM, min_count = 40, random_order = FALSE, rotation = 0.25, color = RColorBrewer::brewer.pal(8, "Dark2"), max_size=5, min_size = 0.1)
-```
 
 ```{r}
+
+#generate col means of TF-idf
+mean_tfidf <- colMeans(DTM_tfidf)
+
+#calc tenth percentile to remove
+low_tenth_percentile_of_tf_idf = quantile(mean_tfidf, probs = 0.10)
+
+#filter data to only inlcude those above the 10th percentile
+DTM <- DTM[, colMeans(DTM_tfidf) > low_tenth_percentile_of_tf_idf]
 DTM
+
+#remaining are now 180 docs and 1039 features
 ```
+
 
 
 
@@ -255,13 +263,37 @@ _5 Points_
 
 
 ```{r}
+# df$length = str_count(df$statement_text, '\\w
+df$length = lengths(strsplit(df$statement_text, " "))
+```
+
+
+```{r}
+#transform the date column to datetime format
+df$datum <- as.Date(as.character(df$date), tryFormats = c("%Y%m%d"))
+# df$datum
+
+# #who was the boss at what time
+# df$who_was_boss = ""
+# 
+# if (df$datum >= as.Date('2000-01-01') | df$datum < as.Date('2006-02-01')){df$who_was_boss = "Alan Greenspan"
+# }  else if (df$datum >= as.Date('2006-02-01') | df$datum < as.Date('2014-02-01')){ df$who_was_boss = "Ben Bernanke"
+# }  else if (df$datum >= as.Date('2014-02-01') | df$datum < as.Date('2018-02-04')) {df$who_was_boss = "Janet Yellen"
+# }  else{df$who_was_boss = "Jerome Powell"}
+
 
 ```
 
 
 
+```{r}
 
+ggplot(df, aes(x = datum, y =length)) + 
+  geom_point() + geom_vline(xintercept = as.Date('2006-02-01'), color = "red") + geom_vline(xintercept = as.Date('2014-02-01'), color = "yellow") + geom_vline(xintercept = as.Date('2018-02-04'), color = "green") + annotate(geom = "text", x =as.Date('2010-02-01'), y = 900,label = "Alan Greenspan" ) + annotate(geom = "text", x =as.Date('2002-02-01'), y = 900,label = "Ben Bernanke" ) + annotate(geom = "text", x =as.Date('2016-02-01'), y = 900,label = "Janet Yellen" ) + annotate(geom = "text", x =as.Date('2020-02-01'), y = 900,label = "Jerome Powell" )
 
+```
+
+We observe that Alan Greenspan always had relatively short statements, with less than 300 words. His successor Ben Bernanke started out with the same statement lenghts, but they increased over time to a massive 900 words. Janet Yellen's first couple of statements were similarly lengthy, but they decreased to around 500 at the end of her term. Jerome Powell has quite succinct statements, with several outliers - likely related to statements about the pandemic.
 
 <br><br>
 
@@ -274,8 +306,37 @@ _5 Points_
 
 ```{r}
 
+#10% most freq words
+DTM_10_most_freq <- dfm_trim(DTM, min_termfreq = 0.9, termfreq_type = "quantile")
+
+#make wordcloud
+set.seed(100)
+
+textplot_wordcloud(DTM_10_most_freq, random_order = FALSE, rotation = 0.25, color = RColorBrewer::brewer.pal(8, "Dark2"), max_size=5, min_size = 0.1)
 ```
 
+
+```{r}
+#10% highest TF-IDF
+
+#generate col means of TF-idf
+DTM_tfidf <- dfm_tfidf(DTM)
+mean_tfidf <- colMeans(DTM_tfidf)
+
+#calc ninetieth percentile to remove
+ninetieth_percentile_of_tf_idf = quantile(mean_tfidf, probs = 0.90)
+
+#filter data to only inlcude those above the 10th percentile
+DTM_10_tfidf <- DTM[, colMeans(DTM_tfidf) > ninetieth_percentile_of_tf_idf]
+
+
+#make wordcloud
+set.seed(100)
+
+textplot_wordcloud(DTM_10_tfidf, random_order = FALSE, rotation = 0.25, color = RColorBrewer::brewer.pal(8, "Dark2"), max_size=5, min_size = 0.1)
+```
+
+Some terms that commonly occur in the count wordcloud, such as 'rate' and 'remain' do not occur in the tf-idf wordcloud. This is because of the nature of tf-idf which is calculated as the occurences of word j in document i multiplied by the log(number of docs/number of docs containing word j). We hypothesize that words like 'rate' occur once or several times in (nearly) every document, therefore receiving a very low tf-idf score.
 
 
 <br><br>
