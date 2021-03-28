@@ -540,7 +540,14 @@ ggplot(data=dfz, aes(x=datum, y=topic1, group =1))+
   geom_line(color="blue",)+
   geom_line(aes(y = topic2), color="red",)+
   geom_line(aes(y = topic3), color="green",)+
-  xlab("Year")+ylab(NULL)
+  xlab("Year")+ylab(NULL)+
+  geom_vline(xintercept = as.Date('2006-02-01'), color = "black") + 
+  geom_vline(xintercept = as.Date('2014-02-01'), color = "black") +
+  geom_vline(xintercept = as.Date('2018-02-04'), color = "black") +
+  annotate(geom = "text", x =as.Date('2010-02-01'), y = 0.85,label = "Ben Bernanke" ) +
+  annotate(geom = "text", x =as.Date('2002-02-01'), y = 0.85,label = "Alan Greenspan" ) +
+  annotate(geom = "text", x =as.Date('2016-02-01'), y = 0.85,label = "Janet Yellen" ) +
+  annotate(geom = "text", x =as.Date('2020-02-01'), y = 0.85,label = "Jerome Powell" )
 
 ```
 
