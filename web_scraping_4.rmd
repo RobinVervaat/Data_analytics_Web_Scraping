@@ -414,8 +414,6 @@ ggplot(dfsent, aes(x = datum)) +
 ```
 
 
-We can see that there was so much negative and uncertainty sentiments under Alan Greenspan and most of Ben Bernanke's term. There was a spike in uncertainty at the beginning of Yellen's, but it was followed by a period of positivity which continued to the near end of Jerome Powell's.
-
 We can see that there was so much negative and uncertainty sentiments under Alan Greenspan and most of Ben Bernanke's term. The spike during Ben Bernanke's term correlates with the Great Recession. There was a spike in uncertainty at the beginning of Yellen's, but it was followed by a period of positivity which continued to the near end of Jerome Powell's. The Corona crisis can be seen in the beginning of 2020, when negativity shoots up.
 
 <br><br>
