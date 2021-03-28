@@ -1,0 +1,705 @@
+---
+title: "Data analytics for economists: Assignment 2"
+subtitle: "YOUR NAMES"
+output: 
+  html_document:
+    number_sections: true
+---
+
+<style type="text/css">
+body{ font-size: 15pt;}
+pre {font-size: 12px;}
+p {line-height: 1.5em;}
+p {margin-bottom: 1em;}
+p {margin-top: 1em;}
+h4 {font-size: 110%; line-height:60%;}
+</style>
+
+<!-- ignore -->
+```{r include=FALSE}
+knitr::opts_chunk$set(cache=FALSE, warning = FALSE)
+```
+
+
+```{r}
+library("rvest")
+library("dplyr")
+```
+
+***
+# Introduciton
+
+In this assignment, you will collect and analyze the US FOMC (Federal Open Market Committee)'s public statements regarding its monetary policy decisions. The FOMC  uses [open market operations](https://www.federalreserve.gov/monetarypolicy/openmarket.htm) to adjust the federal funds rate in the target range (at around the target rate, before late 2008). The FOMC holds eight regularly scheduled meetings during the year and other meetings as needed, which are followed by a public statement about the decision made during the meeting. You will analyze these statements for the period starting from 2000 to 2020. 
+
+Please complete each task below and answer the questions clearly. You will use R markdown. Please download this rmd file and provide your code in the code chunk and your answer for each task. Once done, render your rmd in html and submit your html and .rmd files to Canvas. 
+
+The deadline is __23:59 28 March__. 
+
+
+
+
+
+<br><br>
+
+# Task/Questions (100 points total) 
+
+<br><br>
+
+## 
+
+Collect the statements by using web-scraping in R. The statements for the period 2016-2020 are available here: [link](https://www.federalreserve.gov/monetarypolicy/fomccalendars.htm). Each statement can be accessed via the link "HTML" below "Statement". 
+
+For the statements before 2016, use this [link](https://www.federalreserve.gov/monetarypolicy/fomc_historical_year.htm), or the url: www.federalreserve.gov/monetarypolicy/fomchistoricalYEAR.htm, where you replace "YEAR" with the year in 4-digit format (i.e. 2000, 2001, ..., 2015).
+
+Extract the texts of each statement from its web page and store the extracted texts in a form of your choice (for example, in a character vector, where each statement is stored in each element). Sort the extracted statements according to their issue date. There are 180 statements in total starting from 2 Feb 2000 to 16 Dec 2020. Make sure that the texts are extracted properly.
+
+Everything has to be done programmatically (no manual typing, no copy-pasting). If you do not manage, please collect them manually, for which, however, you will lose substantial points. You may _partially_ collect some statements manually, which will also lead to some point deduction.  
+
+As hints, these are the functions I used: `read_html`, `html_nodes`, `html_attr`, `as.Date`, `max`, `min`, `grep`, `paste0`, `paste0(, collapse=" ")`, `gsub`, `order`. I also used a couple of for-loop's and an if-else statement. Note that there are a number of approaches for this and you do not have to use the exact same functions I used. 
+
+_WARNING_: You may get a tip from another group, but I will immediately notice it if you (almost) copy another group's codes. It is highly unlikely for two groups to have substantially similar codes for this.    
+
+_35 Points_
+
+```{r}
+# Create a, b, c, d variables
+a <- c(19900101)
+b <- c('sample text here')
+# Join the variables to create a data frame
+df <- data.frame(a,b)
+names(df) <- c('date', 'statement_text')
+
+library("rvest")
+library("dplyr")
+library("quanteda")
+library("stringr")
+library("ggplot2")
+```
+
+
+
+```{r}
+
+counter = 1
+
+for (year_selected in 2000:2015){
+  link_for_year <- paste0("https://www.federalreserve.gov/monetarypolicy/fomchistorical",year_selected,".htm")
+  
+  year_all <- read_html(url(link_for_year))
+  
+  # statements <- html_nodes(year_all, ".col-md-6+ .col-md-6 p:nth-child(1) a")
+  statements <- html_nodes(year_all, "#article a")
+  statements_links <- html_attr(statements, "href")
+
+  statements_links_full <- paste0("https://www.federalreserve.gov",statements_links)
+  
+  statements_links_full <- statements_links_full[grepl("press", statements_links_full)]
+  
+  # if (year_selected <= 2002){
+    # statements_links_full <- statements_links_full[grepl("press/general", statements_links_full)]} else{
+     # statements_links_full <- statements_links_full[grepl("/monetary", statements_links_full)]}
+  
+  
+  for (link in statements_links_full){
+    
+    
+    #we see different date formats for different years. The problem is that the switch between formats is not isolated to single years. Especially 2005 is quite nasty as it contains multiple formats
+    
+    # if (year_selected <= 2002){  
+    #   the_actual_date <- substr(link, nchar(link) - 8, nchar(link)-1)} 
+    # else if (year_selected <= 2006){
+    #   the_actual_date <- substr(link, nchar(link) - 19, nchar(link)-12)} 
+    # else { 
+    #   the_actual_date <- substr(link, nchar(link) - 12, nchar(link)-5)
+    # }
+    
+    if (counter <= 27){  
+      the_actual_date <- substr(link, nchar(link) - 8, nchar(link)-1)} 
+    else if (counter <= 48){
+      the_actual_date <- substr(link, nchar(link) - 19, nchar(link)-12)} 
+    else if (counter <= 51){
+      the_actual_date <- substr(link, nchar(link) - 8, nchar(link)-1)}
+    else { 
+      the_actual_date <- substr(link, nchar(link) - 12, nchar(link)-5)
+    }
+    
+    
+    the_actual_date <- as.integer(the_actual_date)
+    
+    state_page <- read_html(url(link))
+    
+    if (year_selected <= 2005){  
+      node <- html_nodes(state_page, "td p")} 
+    else {
+      node <- html_nodes(state_page, ".hidden-sm+ .col-md-8")} 
+    
+    raw_text_statement <- html_text(node, trim=TRUE)
+    
+    merged_obj <- paste0(raw_text_statement, collapse = " ")
+    merged_obj <- gsub("\n", "", merged_obj)
+    merged_obj <- gsub("\r", "", merged_obj)
+    
+    df[nrow(df) + 1,] = c(the_actual_date,merged_obj)
+    
+    counter = counter + 1
+  
+  }
+}
+
+```
+
+
+
+```{r}
+
+year_all <- read_html("https://www.federalreserve.gov/monetarypolicy/fomccalendars.htm")
+statements <- html_nodes(year_all, ".col-lg-2 a+ a")
+statements_links <- html_attr(statements, "href")
+statements_links_full <- paste0("https://www.federalreserve.gov",statements_links)
+
+for (link in statements_links_full){
+  
+  the_actual_date <- substr(link, nchar(link) - 12, nchar(link)-5)
+  the_actual_date <- as.integer(the_actual_date)
+  
+  state_page <- read_html(url(link))
+  
+  node <- html_nodes(state_page, ".hidden-sm+ .col-md-8")
+  
+  raw_text_statement <- html_text(node, trim=TRUE)
+  
+  merged_obj <- paste0(raw_text_statement, collapse = " ")
+  merged_obj <- gsub("\n", "", merged_obj)
+  merged_obj <- gsub("\r", "", merged_obj)
+  
+  df[nrow(df) + 1,] = c(the_actual_date,merged_obj)
+  
+}
+#drop the first test statement
+df = df[-1,]
+
+#one object was identified as a statement by the url based scraping, but not listed as a statement on the official Federal reserve website. (https://www.federalreserve.gov/newsevents/pressreleases/monetary20140917c.htm)
+
+#We choose to drop this observeration as we feel this is not an official statement
+df = df[-128,]
+
+
+#drop the statements issued after 2020
+df = df[!df$date>=20210000,]
+
+#order by date
+df = arrange(df, date)
+```
+
+
+```{r}
+# write.csv(df,"FED_data_scrape.csv", row.names = FALSE)
+```
+
+<br><br>
+
+##  
+
+Represent the texts with `bag-of-words` and preprocess the text data. Remove punctuation, numbers, symbols, and separators, and stop words. Remove also single-character terms and the terms in a form `#-#` (ex. 4-3, 5-2). Stem the terms and construct a document-term matrix. Remove additional words that you think are domain-specific stop words (for example, `percent`, `chairman`, `fomc`, `board`).  
+
+Also, compute `tf-idf` scores. Remove the words whose mean `tf-idf` score is below the 10th percentile. 
+
+Report how many terms are left in your document-term matrix. 
+
+_5 Points_
+
+
+```{r}
+
+#create a bag of words
+TOKS <- tokens(df[,2], remove_numbers = TRUE, remove_punct = TRUE, remove_symbols = TRUE, remove_separators = TRUE,split_hyphens = TRUE)
+n1 <- tokens_ngrams(TOKS, n=1)
+# print(n1)
+
+#tokenize and filter data
+TOKS <- tokens_wordstem(TOKS, language="english")
+TOKS <- tokens_remove(TOKS, stopwords("english"))
+
+```
+
+```{r}
+
+#DTM matrix
+DTM <- dfm(TOKS)
+DTM <- dfm_select(DTM, min_nchar = 2, selection="remove", pattern=c("percent","chairman","fomc","board","feder","committe","market","econom","polici","today","meet","decid"), valuetype="fixed")
+
+topfeatures((DTM))
+
+#tf-idf
+DTM_tfidf <- dfm_tfidf(DTM)
+DTM_tfidf
+```
+
+
+```{r}
+
+#generate col means of TF-idf
+mean_tfidf <- colMeans(DTM_tfidf)
+
+#calc tenth percentile to remove
+low_tenth_percentile_of_tf_idf = quantile(mean_tfidf, probs = 0.10)
+
+#filter data to only inlcude those above the 10th percentile
+DTM <- DTM[, colMeans(DTM_tfidf) > low_tenth_percentile_of_tf_idf]
+DTM
+
+#remaining are now 180 docs and 1039 features
+```
+
+
+
+
+
+
+<br><br>
+
+##  
+
+Plot the document (statement) length over the time period according to their issue date. From this [source](https://en.wikipedia.org/wiki/Chair_of_the_Federal_Reserve), you will find that there were 4 chairs of the Fed Reserve who served during this period. Indicate this information in the plot (you could simply indicate a change in the chair by a vertical line). What do you observe?
+
+_5 Points_
+
+
+```{r}
+# df$length = str_count(df$statement_text, '\\w
+df$length = lengths(strsplit(df$statement_text, " "))
+```
+
+
+```{r}
+#transform the date column to datetime format
+df$datum <- as.Date(as.character(df$date), tryFormats = c("%Y%m%d"))
+# df$datum
+
+# #who was the boss at what time
+# df$who_was_boss = ""
+# 
+# if (df$datum >= as.Date('2000-01-01') | df$datum < as.Date('2006-02-01')){df$who_was_boss = "Alan Greenspan"
+# }  else if (df$datum >= as.Date('2006-02-01') | df$datum < as.Date('2014-02-01')){ df$who_was_boss = "Ben Bernanke"
+# }  else if (df$datum >= as.Date('2014-02-01') | df$datum < as.Date('2018-02-04')) {df$who_was_boss = "Janet Yellen"
+# }  else{df$who_was_boss = "Jerome Powell"}
+
+
+```
+
+
+
+```{r}
+
+ggplot(df, aes(x = datum, y =length)) + 
+  geom_point() + geom_vline(xintercept = as.Date('2006-02-01'), color = "red") + geom_vline(xintercept = as.Date('2014-02-01'), color = "yellow") +
+  geom_vline(xintercept = as.Date('2018-02-04'), color = "green") +
+  annotate(geom = "text", x =as.Date('2010-02-01'), y = 900,label = "Ben Bernanke" ) +
+  annotate(geom = "text", x =as.Date('2002-02-01'), y = 900,label = "Alan Greenspan" ) +
+  annotate(geom = "text", x =as.Date('2016-02-01'), y = 900,label = "Janet Yellen" ) +
+  annotate(geom = "text", x =as.Date('2020-02-01'), y = 900,label = "Jerome Powell" )
+
+```
+
+We observe that Alan Greenspan always had relatively short statements, with less than 300 words. His successor Ben Bernanke started out with the same statement lenghts, but they increased over time to a massive 900 words. Janet Yellen's first couple of statements were similarly lengthy, but they decreased to around 500 at the end of her term. Jerome Powell has quite succinct statements, with several outliers - likely related to statements about the pandemic.
+
+<br><br>
+
+##
+
+Make a word cloud plot of the top 10% most frequently used words. Make also a word cloud plot of the top 10% words based on the tf-idf scores instead of the word counts. How do the two plots differ and why?
+
+_5 Points_
+
+
+```{r}
+
+#10% most freq words
+DTM_10_most_freq <- dfm_trim(DTM, min_termfreq = 0.9, termfreq_type = "quantile")
+
+#make wordcloud
+set.seed(100)
+
+textplot_wordcloud(DTM_10_most_freq, random_order = FALSE, rotation = 0.25, color = RColorBrewer::brewer.pal(8, "Dark2"), max_size=5, min_size = 0.1)
+```
+
+
+```{r}
+#10% highest TF-IDF
+
+#generate col means of TF-idf
+DTM_tfidf <- dfm_tfidf(DTM)
+mean_tfidf <- colMeans(DTM_tfidf)
+
+#calc ninetieth percentile to remove
+ninetieth_percentile_of_tf_idf = quantile(mean_tfidf, probs = 0.90)
+
+#filter data to only inlcude those above the 10th percentile
+DTM_10_tfidf <- DTM[, colMeans(DTM_tfidf) > ninetieth_percentile_of_tf_idf]
+
+
+#make wordcloud
+set.seed(100)
+
+textplot_wordcloud(DTM_10_tfidf, random_order = FALSE, rotation = 0.25, color = RColorBrewer::brewer.pal(8, "Dark2"), max_size=5, min_size = 0.1)
+```
+
+Some terms that commonly occur in the count wordcloud, such as 'rate' and 'remain' do not occur in the tf-idf wordcloud. This is because of the nature of tf-idf which is calculated as the occurences of word j in document i multiplied by the log(number of docs/number of docs containing word j). We hypothesize that words like 'rate' occur once or several times in (nearly) every document, therefore receiving a very low tf-idf score.
+
+
+<br><br>
+
+##
+
+The time period of the statements, 2000-2020, can be divided into 4 sub-periods, depending on who was the chair. List the top 10 most frequently used words for each of the 4 sub-periods and provide your observations. 
+
+
+You may find these articles interesting: [link1](https://en.wikipedia.org/wiki/Inflation_targeting#United_States), [link2](https://www.jstor.org/stable/2138238
+)
+
+_3 Points_
+
+
+```{r}
+DTM_alan_colsums_sorted = sort(colSums(DTM[1:52,]), decreasing = TRUE)
+print('The 10 most common word for Alan Greenspan are:')
+names(DTM_alan_colsums_sorted[1:10])
+
+DTM_ben_colsums_sorted = sort(colSums(DTM[53:122,]), decreasing = TRUE)
+print('The 10 most common word for Ben Bernanke are:')
+names(DTM_ben_colsums_sorted[1:10])
+
+DTM_janet_colsums_sorted = sort(colSums(DTM[123:154,]), decreasing = TRUE)
+print('The 10 most common word for Janet Yellen are:')
+names(DTM_janet_colsums_sorted[1:10])
+
+DTM_ben_colsums_sorted = sort(colSums(DTM[155:180,]), decreasing = TRUE)
+print('The 10 most common word for Jerome Powell are:')
+names(DTM_ben_colsums_sorted[1:10])
+```
+
+Inflation appears to be the most commonly used word for 4 out of 3 Fed Chairs, which is unsurprising, given that the control of the inflation is one of the main directives of the Federal Reserve. The only exception was Alan Greenspan, for him inflation was only the 6th most commonly used word - we may suspect that this is in line with his cautious attitude towards stringent inflation targeting. His most often used word - rate - appears very frequently for other chairs as well. Another interesting micro-trend is the presence of 'labor' word for the last two Chairs, which is further accompanied by the stem 'employ' for the current Jerome Powell. Such words as missing from the 10 most frequent words of the previous 2 Chairs, hinting that in later times the importance of direct employment-related targets became more pronounced.
+
+
+<br><br>
+
+##
+
+Loughran and McDonald (2011, [link](https://onlinelibrary-wiley-com.vu-nl.idm.oclc.org/doi/10.1111/j.1540-6261.2010.01625.x)) constructed a dictionary in financial contexts for sentiments including "positive", "negative", "uncertainty". 
+
+Conduct a sentiment analysis by applying their dictionary to the document-term matrix such that each element reflects the relative frequency within a document (i.e., normalize it by document length). Plot the sentiment measures of each FOMC statement over time for "positive", "negative", and "uncertainty" separately (either in one single plot or in different plots).        
+
+_5 Points_
+
+
+```{r}
+#devtools::install_github("kbenoit/quanteda.dictionaries") 
+library(quanteda.dictionaries)
+
+sentiment <- dfm(DTM, dictionary = data_dictionary_LoughranMcDonald)
+sent <- convert(sentiment, to = "data.frame")
+dfsent <- cbind(df,sent)
+ggplot(dfsent, aes(x = datum)) + 
+  geom_line(aes(y = negative), color = "red") + 
+  geom_line(aes(y = positive), color="green") +
+  geom_line(aes(y = uncertainty), color="blue") +
+  geom_vline(xintercept = as.Date('2006-02-01'), color = "black") + 
+  geom_vline(xintercept = as.Date('2014-02-01'), color = "black") +
+  geom_vline(xintercept = as.Date('2018-02-04'), color = "black") +
+  annotate(geom = "text", x =as.Date('2010-02-01'), y = 10,label = "Ben Bernanke" ) +
+  annotate(geom = "text", x =as.Date('2002-02-01'), y = 10,label = "Alan Greenspan" ) +
+  annotate(geom = "text", x =as.Date('2016-02-01'), y = 10,label = "Janet Yellen" ) +
+  annotate(geom = "text", x =as.Date('2020-02-01'), y = 10,label = "Jerome Powell" )
+
+```
+
+
+We can see that there was so much negative and uncertainty sentiments under Alan Greenspan and most of Ben Bernanke's term. There was a spike in uncertainty at the beginning of Yellen's, but it was followed by a period of positivity which continued to the near end of Jerome Powell's.
+
+We can see that there was so much negative and uncertainty sentiments under Alan Greenspan and most of Ben Bernanke's term. The spike during Ben Bernanke's term correlates with the Great Recession. There was a spike in uncertainty at the beginning of Yellen's, but it was followed by a period of positivity which continued to the near end of Jerome Powell's. The Corona crisis can be seen in the beginning of 2020, when negativity shoots up.
+
+<br><br>
+
+##
+
+Using FRED API, obtain the time-series data for the effective federal funds rate. Plot the effective federal funds rate over time along with the "uncertainty" sentiment measures of the FOMC statements. What do you observe? 
+
+Note that the effective federal funds rate data is provided in unit of %. For a hint, you can provide multiple data sets to `ggplot()` and simply plot the two time-series over the same period without merging them into one data set in advance. 
+
+_5 Points_
+
+
+
+```{r}
+library(httr)
+library(jsonlite)
+library(data.table)
+
+query_list <- list(
+                    api_key = "b3ac778f907e3ecc60549a2aeda989c7",
+                    series_id = "EFFR",
+                    file_type = "json"
+                  )
+
+data <- GET(
+          url = "https://api.stlouisfed.org/",
+          path = "fred/series/observations",
+          query = query_list
+           )
+
+data <- content(data, "text")
+data <- fromJSON(data)
+data <- data.table(data$observations)
+
+data[, date := as.Date(date, "%Y-%m-%d")]
+data[, value := as.numeric(value)]
+
+ggplot(data=data, aes(x=date, y=value, group=1))+
+  geom_line(color="red")+
+  geom_line(data = dfsent,aes(y = uncertainty, x=datum), color="blue",)+
+  xlab("Year")+ylab(NULL)
+
+```
+
+EFFR is a monetary tool for the Fed to respond to how they see the economy is evolving. When they see the economy is growing to fast, they would increase the EFFR to tame the inflation rate. Alternatively, when the economic growth is stagnant, the EFFR will be decreased to spur business activities. From 2000-2010, there appeared a strong correlation between the EFFR and the uncertainty sentiment : A sharp decline in the EFFR around 2001-2002 was accompanied by a decline in uncertainty sentiment. The two lines were in sync particularly between 2005 and 2010. However, it is not straightforward whether uncertainty about the market led to increasing EFFR or increasing EFFR led to more uncertainty. However,after 2010, the relationship seemed muted with the EFFR relatively unchanged while the uncertainty sentiment fluctuated quite a lot. The relationship seemed to be reversing in 2017 as the EFFR increased while uncertainty was declining. 
+
+
+
+<br><br>
+
+##
+
+Fit a topic model based on Latent Dirichlet Allocation (LDA) with the number of topics = 3. For each topic, visualize the 100 most likely terms in a word cloud plot. Give short interpretations to each topic.     
+
+_5 Points_
+
+
+```{r}
+DTM_TM <- convert(DTM, to = "topicmodels")
+library(topicmodels)
+
+K=3
+TM.fit <- LDA(DTM_TM, K, method="Gibbs", control=list(seed = 111))
+str(TM.fit)
+TM.res <- posterior(TM.fit)
+str(TM.res)
+Z <- TM.res$topics
+PHI <- TM.res$terms
+terms(TM.fit, 100)
+library(wordcloud)
+
+top_prob1 <- sort(PHI[1,], decreasing=TRUE)[1:100]
+
+set.seed(1)
+wordcloud(words = names(top_prob1), freq = top_prob, min.freq = 0, scale = c(4,0.1),
+          random.order = FALSE, rot.per = 0.25,
+          colors = brewer.pal(8, "Dark2"))
+
+top_prob2 <- sort(PHI[2,], decreasing=TRUE)[1:100]
+
+set.seed(1)
+wordcloud(words = names(top_prob2), freq = top_prob, min.freq = 0, scale = c(4,0.1),
+          random.order = FALSE, rot.per = 0.25,
+          colors = brewer.pal(8, "Dark2"))
+
+top_prob3 <- sort(PHI[3,], decreasing=TRUE)[1:100]
+
+set.seed(1)
+wordcloud(words = names(top_prob3), freq = top_prob, min.freq = 0, scale = c(4,0.1),
+          random.order = FALSE, rot.per = 0.25,
+          colors = brewer.pal(8, "Dark2"))
+```
+
+Topic 1: Action : What actions are needed for the economy? Could be economic growth, monetary policies which include the reserve requirements and risk management...
+
+Topic 2: Secure/Security - Interpretation of this topic is not clear.
+
+Topic 3: Inflation : What matters to inflation? It could be expectation ( how business/people expect the economy will grow or slow down), the condition of the economy itself and the unemployment.
+
+<br><br>
+
+##
+
+Plot each topic's estimated probability for the statements over time in a single plot (i.e., 3 time series in one plot). What do you observe? Is there any notable difference, depending on who was the chair? How is this [event](https://www.reuters.com/article/us-usa-fed-inflation-target-idUSTRE80O25C20120126) reflected in this result?
+
+_5 Points_
+
+
+```{r}
+
+colnames(Z, do.NULL = FALSE)
+colnames(Z) <- c("topic1", "topic2", "topic3")
+dfz <- cbind(df,Z)
+
+ggplot(data=dfz, aes(x=datum, y=topic1, group =1))+
+  geom_line(color="blue",)+
+  geom_line(aes(y = topic2), color="red",)+
+  geom_line(aes(y = topic3), color="green",)+
+  xlab("Year")+ylab(NULL)
+
+```
+
+
+
+
+
+<br><br>
+
+##
+
+According to the estimation result, which statement has the highest probability of using the term `inflat`? What is the estimated probability?
+
+_7 Points_
+
+```{r}
+#which.max(Z[,3])
+#max(Z[,3])
+
+inflat_chance = Z * PHI[,"inflat"]
+inflat_chance <- as.data.frame(cbind(inflat_chance, prob_sum=rowSums(inflat_chance)))
+which.max(inflat_chance$prob_sum)
+max(inflat_chance$prob_sum)
+```
+Statement 6 (2000-10-03) has the highest probability of using the term 'inflat', with an estimated probability of ~5.19%.
+
+
+<br><br>
+
+##
+
+Find the number of topic $K$ that minimizes the value of perplexity with 10-fold cross validation. When computing a perplexity score from a hold-out set, use the equal topic probabilities for the documents in a hold-out set. Consider $K$ from 2 to 10.  
+
+_7 Points_
+
+
+```{r}
+library(foreach)
+library(caret)
+set.seed(2)
+folds <- createFolds(1:nrow(DTM_TM), list=F, k= 10)
+
+results <- foreach(k = 2:10, .combine = rbind) %dopar%{
+    mat <- matrix(0, nrow = 10, ncol = 2)
+    colnames(mat) <- c("k", "perplexity")
+    for(i in 1:10){
+      test <- DTM_TM[folds==i,] 
+      train <- DTM_TM[folds!=i,]
+      
+      fitted <- LDA(train, k = k, method = "Gibbs",
+                    control = list(seed = 111) )
+      mat[i,] <- c(k, perplexity(fitted, newdata = test))
+    }
+    return(mat)
+  }
+
+results_df <- as.data.frame(results)
+which.min(results_df$perplexity) 
+
+```
+
+With K=10, we achieve the minimum perplexity.
+
+
+
+
+
+
+<br><br>
+
+##
+
+Download and read in this data ([link](https://www.dropbox.com/s/fpz192lb9v2e8eu/FOMC_decision.csv?dl=1)). This data set contains the policy decisions of the FOMC made in each meeting on the target federal fund rate.  Each decision is described with one of the three classes: "up", "down", "hold".  
+
+Train a random forest model that predicts the __next__ policy decision based on the most recent FOMC's statement (for example, predict the policy decision on 21 March 2000 with the statement issued on 2 Feb 2000). Simply use the document-term matrix with the word counts and use all 180 statements to train the model.     
+
+
+Based on out-of-bag predictions, construct a confusion matrix that reports whether or not the model correctly predicted whether the FOMC __lowered__ the target rate. What is the accuracy rate of predicting whether the FOMC __lowered__ the target rate?
+
+_7 Points_
+
+
+```{r}
+targets <- read.csv(url("https://www.dropbox.com/s/fpz192lb9v2e8eu/FOMC_decision.csv?dl=1"))
+targets$POLICY <- invisible(sapply(targets$POLICY,switch,'down'=1,'hold'=2,'up'=3))
+decision <- targets[-1,-1]
+
+DTM_df <- convert(DTM, to = "data.frame")
+DTM_df <- setDT(DTM_df)
+forest_train <- DTM_df[,-1]
+forest_train <- cbind(decision,forest_train)
+
+forest_train$decision <- as.factor(forest_train$decision)
+
+names(forest_train) <- gsub("\\.", "_", names(forest_train))
+names(forest_train) <- gsub(":", "_", names(forest_train))
+colnames(forest_train) <- paste(colnames(forest_train), "_c", sep = "")
+
+library(randomForest)
+set.seed(111)
+RF <- randomForest(decision_c ~ . , data = forest_train, ntree=100, mtry = 10, importance = TRUE)
+
+#y_pred_decision <- predict(RF, forest_train, type="class") #prediction on the whole training set - not what we need
+y_pred_decision <- predict(RF, type="class") #out-of-bag prediction
+y_pred_decision_if_lowered <- ifelse(y_pred_decision==1, 1, 0)
+
+decision_if_lowered <- ifelse(decision==1, 1, 0)
+
+confusionMatrix(factor(y_pred_decision_if_lowered), factor(decision_if_lowered))
+```
+The accuracy rate is ~89.44% for the out-of-bag prediction.
+
+
+
+<br><br>
+
+##
+
+Using the out-of-bag predictions, make an ROC curve plot that evaluates the model for correctly predicting whether the FOMC __lowered__ the target rate. What is the AUC value for this?
+
+_4 Points_
+
+
+*For plotting the ROC curve, the dataset was retrained in a way that outcomes are noted as 1 for lowered target rates and 0 for the other 2 cases, thus allowing us to correctly label correct and incorrect classifications in a binary manner, as this is a requirement for the ROC curve. For the plot, the template from the class was used.*
+```{r}
+library(pROC)
+
+forest_train_if_lowered <- forest_train
+forest_train_if_lowered$decision_c <- invisible(sapply(forest_train_if_lowered$decision_c,switch,'2'=1,'2'=0,'3'=0))
+
+RF2 <- randomForest(decision_c ~ . , data = forest_train_if_lowered, ntree=100, mtry = 10, importance = TRUE)
+
+y2_pred_decision_if_lowered <- predict(RF, type="prob")[,2]
+
+ROC <- roc(forest_train_if_lowered$decision_c, y2_pred_decision_if_lowered)
+
+ggroc(ROC, legacy.axes = T, color="red") +
+geom_abline(slope = 1 ,intercept = 0) + 
+theme(
+panel.background = element_blank(), 
+panel.border = element_rect(size = 1, fill = NA))+ 
+xlab('100% - Specificity') +
+ylab('Sensitivity') +
+scale_x_continuous(breaks = seq(0,1,0.25), labels = seq(0,1,0.25) * 100) + 
+scale_y_continuous(breaks = seq(0,1,0.25), labels = seq(0,1,0.25) * 100) +
+annotate("text", x = 0.5, y = 0.3, label = paste0("AUC = ", round(auc(ROC),3)))
+```
+The area under the curve covers 77,5%.
+
+
+<br><br>
+
+##
+
+Compute the variable importance of each term. Report the top 10 terms that contributed most. 
+
+_2 Points_
+
+
+
+```{r}
+library(vip)
+
+varImp(RF)
+vip(RF)
+```
+The top 10 terms (in decreasing variance) are 'st', 'philadelphia', 'rough', 'request', 'term', 'discount', 'basi', 'kansa', 'reduct' and 'respond'.
