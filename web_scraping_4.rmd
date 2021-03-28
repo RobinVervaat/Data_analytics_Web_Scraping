@@ -658,7 +658,7 @@ decision_if_lowered <- ifelse(decision==1, 1, 0)
 
 confusionMatrix(factor(y_pred_decision_if_lowered), factor(decision_if_lowered))
 ```
-The accuracy rate is ~89.44% for the out-of-bag prediction.
+The accuracy rate is ~91.11% for the out-of-bag prediction.
 
 
 
