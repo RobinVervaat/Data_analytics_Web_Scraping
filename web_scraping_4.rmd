@@ -491,21 +491,21 @@ library(wordcloud)
 top_prob1 <- sort(PHI[1,], decreasing=TRUE)[1:100]
 
 set.seed(1)
-wordcloud(words = names(top_prob1), freq = top_prob, min.freq = 0, scale = c(4,0.1),
+wordcloud(words = names(top_prob1), freq = top_prob1, min.freq = 0, scale = c(4,0.1),
           random.order = FALSE, rot.per = 0.25,
           colors = brewer.pal(8, "Dark2"))
 
 top_prob2 <- sort(PHI[2,], decreasing=TRUE)[1:100]
 
 set.seed(1)
-wordcloud(words = names(top_prob2), freq = top_prob, min.freq = 0, scale = c(4,0.1),
+wordcloud(words = names(top_prob2), freq = top_prob2, min.freq = 0, scale = c(4,0.1),
           random.order = FALSE, rot.per = 0.25,
           colors = brewer.pal(8, "Dark2"))
 
 top_prob3 <- sort(PHI[3,], decreasing=TRUE)[1:100]
 
 set.seed(1)
-wordcloud(words = names(top_prob3), freq = top_prob, min.freq = 0, scale = c(4,0.1),
+wordcloud(words = names(top_prob3), freq = top_prob3, min.freq = 0, scale = c(4,0.1),
           random.order = FALSE, rot.per = 0.25,
           colors = brewer.pal(8, "Dark2"))
 ```
