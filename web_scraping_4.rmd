@@ -609,6 +609,13 @@ which.min(results_df$perplexity)
 
 ```
 
+
+```{r}
+grouped_results <- results_df %>% group_by(k)
+grouped_results %>% summarise( perplexity = mean(perplexity))
+```
+
+
 With K=10, we achieve the minimum perplexity.
 
 
