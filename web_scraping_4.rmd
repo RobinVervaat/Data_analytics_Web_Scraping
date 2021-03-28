@@ -552,7 +552,9 @@ ggplot(data=dfz, aes(x=datum, y=topic1, group =1))+
 ```
 
 
+We observe that during Alan Greenspan's term and up to the economic crisis in 2008, growth & action (topic 3) was the main topic (which used to be the main goal of the fed). From 2008-2015, topic 2 occurred most often, correlating with the sub prime mortgage crisis, when the fed lowered the rates. This corresponds with the term of Ben Bernanke. Since 2015, topic 1 (inflation) has been dominant, because of quantitative easing (monetary policy) and the way inflation has responded. This was during Yellen's and Powell's terms.
 
+In an historic shift, the Fed sets the inflation target in 2012. Since then, inflation has been on a steady climb in terms of importance, and has become very dominant in recent years.
 
 
 <br><br>
