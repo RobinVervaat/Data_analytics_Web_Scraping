@@ -693,7 +693,7 @@ scale_x_continuous(breaks = seq(0,1,0.25), labels = seq(0,1,0.25) * 100) +
 scale_y_continuous(breaks = seq(0,1,0.25), labels = seq(0,1,0.25) * 100) +
 annotate("text", x = 0.5, y = 0.3, label = paste0("AUC = ", round(auc(ROC),3)))
 ```
-The area under the curve covers 77,5%.
+The area under the curve covers 76.5%.
 
 
 <br><br>
@@ -710,4 +710,4 @@ _2 Points_
 varImp(RF)
 vip(RF)
 ```
-The top 10 terms (in decreasing variance) are 'st', 'philadelphia', 'rough', 'request', 'term', 'discount', 'basi', 'kansa', 'reduct' and 'respond'.
+The top 10 terms (in decreasing variance) are 'reduct','philadelphia', 'rais', 'respond', 'basic','richmond', 'submit','rough' and 'condit'
