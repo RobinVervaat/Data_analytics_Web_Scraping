@@ -574,7 +574,7 @@ inflat_chance <- as.data.frame(cbind(inflat_chance, prob_sum=rowSums(inflat_chan
 which.max(inflat_chance$prob_sum)
 max(inflat_chance$prob_sum)
 ```
-Statement 6 (2000-10-03) has the highest probability of using the term 'inflat', with an estimated probability of ~5.19%.
+Statement 7 has the highest probability of using the term 'inflat', with an estimated probability of ~5.52%.
 
 
 <br><br>
