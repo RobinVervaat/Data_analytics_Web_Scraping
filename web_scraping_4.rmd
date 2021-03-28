@@ -519,7 +519,7 @@ Topic 1: Inflation : Inflation, targets for inflation and the set targets for th
 
 Topic 2: Loans/Securities - For this cloud there are less prominent trends visible. The main topic is loans/securities. Under this topic we see longer term purchases such as mortgages become an important trend. These words were also of great importance during the 2008 market crash which was in part caused by the sale of subprime mortage securities, all words featured in this word cloud.
 
-Topic 3: Action : What actions (monetary policy) are needed for to sustain growth and what are the associated risks?
+Topic 3: Action/Growth : What actions (monetary policy) are needed for to sustain growth and what are the associated risks?
 
 <br><br>
 
