@@ -24,6 +24,26 @@ knitr::opts_chunk$set(cache=FALSE, warning = FALSE)
 ```{r}
 library("rvest")
 library("dplyr")
+library(foreach)
+library(caret)
+library("quanteda")
+library("stringr")
+library("ggplot2")
+
+#devtools::install_github("kbenoit/quanteda.dictionaries") 
+library(quanteda.dictionaries)
+
+library(httr)
+library(jsonlite)
+library(data.table)
+
+library(topicmodels)
+library(wordcloud)
+library(randomForest)
+
+library(pROC)
+library(vip)
+
 ```
 
 ***
@@ -69,11 +89,6 @@ b <- c('sample text here')
 df <- data.frame(a,b)
 names(df) <- c('date', 'statement_text')
 
-library("rvest")
-library("dplyr")
-library("quanteda")
-library("stringr")
-library("ggplot2")
 ```
 
 
@@ -393,9 +408,6 @@ _5 Points_
 
 
 ```{r}
-#devtools::install_github("kbenoit/quanteda.dictionaries") 
-library(quanteda.dictionaries)
-
 sentiment <- dfm(DTM, dictionary = data_dictionary_LoughranMcDonald)
 sent <- convert(sentiment, to = "data.frame")
 dfsent <- cbind(df,sent)
@@ -429,9 +441,6 @@ _5 Points_
 
 
 ```{r}
-library(httr)
-library(jsonlite)
-library(data.table)
 
 query_list <- list(
                     api_key = "b3ac778f907e3ecc60549a2aeda989c7",
@@ -474,7 +483,6 @@ _5 Points_
 
 ```{r}
 DTM_TM <- convert(DTM, to = "topicmodels")
-library(topicmodels)
 
 K=3
 TM.fit <- LDA(DTM_TM, K, method="Gibbs", control=list(seed = 111))
@@ -484,7 +492,6 @@ str(TM.res)
 Z <- TM.res$topics
 PHI <- TM.res$terms
 terms(TM.fit, 100)
-library(wordcloud)
 
 top_prob1 <- sort(PHI[1,], decreasing=TRUE)[1:100]
 
@@ -508,11 +515,11 @@ wordcloud(words = names(top_prob3), freq = top_prob3, min.freq = 0, scale = c(4,
           colors = brewer.pal(8, "Dark2"))
 ```
 
-Topic 1: Action : What actions are needed for the economy? Could be economic growth, monetary policies which include the reserve requirements and risk management...
+Topic 1: Inflation : Inflation, targets for inflation and the set targets for the (rate) of inflation.
 
-Topic 2: Secure/Security - Interpretation of this topic is not clear.
+Topic 2: Loans/Securities - For this cloud there are less prominent trends visible. The main topic is loans/securities. Under this topic we see longer term purchases such as mortgages.
 
-Topic 3: Inflation : What matters to inflation? It could be expectation ( how business/people expect the economy will grow or slow down), the condition of the economy itself and the unemployment.
+Topic 3: Action : What actions (monetary policy) are needed for to sustain growth and what are the associated risks?
 
 <br><br>
 
@@ -571,8 +578,6 @@ _7 Points_
 
 
 ```{r}
-library(foreach)
-library(caret)
 set.seed(2)
 folds <- createFolds(1:nrow(DTM_TM), list=F, k= 10)
 
@@ -632,7 +637,7 @@ names(forest_train) <- gsub("\\.", "_", names(forest_train))
 names(forest_train) <- gsub(":", "_", names(forest_train))
 colnames(forest_train) <- paste(colnames(forest_train), "_c", sep = "")
 
-library(randomForest)
+
 set.seed(111)
 RF <- randomForest(decision_c ~ . , data = forest_train, ntree=100, mtry = 10, importance = TRUE)
 
@@ -659,8 +664,6 @@ _4 Points_
 
 *For plotting the ROC curve, the dataset was retrained in a way that outcomes are noted as 1 for lowered target rates and 0 for the other 2 cases, thus allowing us to correctly label correct and incorrect classifications in a binary manner, as this is a requirement for the ROC curve. For the plot, the template from the class was used.*
 ```{r}
-library(pROC)
-
 forest_train_if_lowered <- forest_train
 forest_train_if_lowered$decision_c <- invisible(sapply(forest_train_if_lowered$decision_c,switch,'2'=1,'2'=0,'3'=0))
 
@@ -695,8 +698,6 @@ _2 Points_
 
 
 ```{r}
-library(vip)
-
 varImp(RF)
 vip(RF)
 ```
